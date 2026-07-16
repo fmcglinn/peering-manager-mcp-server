@@ -1,4 +1,4 @@
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Router listing
 The server SHALL expose a `list_routers` tool that queries `/api/devices/routers/` and returns a list of routers. Supported filters: `status`, `platform_id`, `local_autonomous_system_id`, `name` (exact match), `hostname` (exact match), `search` (free-text search across name, hostname, platform). Nested objects SHALL be trimmed per the response-shaping spec.

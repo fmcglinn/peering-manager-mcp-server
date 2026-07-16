@@ -1,4 +1,4 @@
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Unified BGP session listing
 The server SHALL expose a `list_bgp_sessions` tool that queries both DirectPeeringSession and InternetExchangePeeringSession endpoints and returns a merged list with common fields. Each result SHALL include a `session_type` field with value `"direct"` or `"ixp"`.

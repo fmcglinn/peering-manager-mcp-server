@@ -36,14 +36,16 @@ function extractCommonFields(session, type) {
     };
 }
 export function registerBgpSessionTools(server) {
-    server.tool("list_bgp_sessions", "List BGP sessions across both direct peering and IXP sessions. Returns unified view with common fields.", {
+    server.tool("list_bgp_sessions", "List BGP sessions across both direct peering and IXP sessions. Returns unified view with common fields. Note: router_name/router_hostname filtering for IXP sessions uses best-effort search matching (may include false positives).", {
         asn: z.number().optional().describe("Filter by remote AS number"),
-        router: z.string().optional().describe("Filter by router name"),
-        ixp: z.number().optional().describe("Filter by internet exchange ID"),
+        router_name: z.string().optional().describe("Filter by router name"),
+        router_hostname: z.string().optional().describe("Filter by router hostname"),
+        internet_exchange_id: z.number().optional().describe("Filter by internet exchange ID"),
         status: z.string().optional().describe("Filter by status (e.g. enabled, disabled, maintenance)"),
         bgp_state: z.string().optional().describe("Filter by BGP state (e.g. established, active, idle)"),
         address_family: z.number().optional().describe("Filter by address family (4 or 6)"),
         is_route_server: z.boolean().optional().describe("Filter IXP sessions by route server status (IXP sessions only)"),
+        search: z.string().optional().describe("Free-text search across AS name, router, IP address, and comments"),
         limit: z.number().optional().describe("Max results to return (default 100, max 1000)"),
         offset: z.number().optional().describe("Offset for pagination"),
     }, async (params) => {
@@ -53,11 +55,14 @@ export function registerBgpSessionTools(server) {
             directParams.autonomous_system_asn = params.asn;
             ixpParams.autonomous_system_asn = params.asn;
         }
-        if (params.router !== undefined) {
-            directParams.router_name = params.router;
+        if (params.router_name !== undefined) {
+            directParams.router_name = params.router_name;
         }
-        if (params.ixp !== undefined) {
-            ixpParams.internet_exchange_id = params.ixp;
+        if (params.router_hostname !== undefined) {
+            directParams.router = params.router_hostname;
+        }
+        if (params.internet_exchange_id !== undefined) {
+            ixpParams.internet_exchange_id = params.internet_exchange_id;
         }
         if (params.status !== undefined) {
             directParams.status = params.status;
@@ -74,7 +79,20 @@ export function registerBgpSessionTools(server) {
         if (params.is_route_server !== undefined) {
             ixpParams.is_route_server = params.is_route_server;
         }
-        const skipDirect = params.is_route_server !== undefined || params.ixp !== undefined;
+        if (params.search !== undefined) {
+            directParams.q = params.search;
+            ixpParams.q = params.search;
+        }
+        // Best-effort router filtering for IXP sessions via search
+        if (ixpParams.q === undefined) {
+            if (params.router_name !== undefined) {
+                ixpParams.q = params.router_name;
+            }
+            else if (params.router_hostname !== undefined) {
+                ixpParams.q = params.router_hostname;
+            }
+        }
+        const skipDirect = params.is_route_server !== undefined || params.internet_exchange_id !== undefined;
         const limit = params.limit ?? 100;
         const offset = params.offset ?? 0;
         const [directResult, ixpResult] = await Promise.all([

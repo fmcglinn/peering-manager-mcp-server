@@ -1,4 +1,4 @@
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Autonomous system listing
 The server SHALL expose a `list_autonomous_systems` tool that queries `/api/peering/autonomous-systems/` and returns a list of autonomous systems. Supported filters: `asn`, `name`, `affiliated` (boolean), `search` (free-text). Responses SHALL have `prefixes` and `as_list` stripped and replaced with summary counts per the response-shaping spec.
